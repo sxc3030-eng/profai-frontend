@@ -114,14 +114,21 @@ var S = {
   sessionId: Math.random().toString(36).slice(2,10),
   messages: []
 };
-// Auto-detect API URL: localhost en dev, Oracle en prod
+// Auto-detect API URL
 var API = (function(){
   var h = window.location.hostname;
   if (h === '127.0.0.1' || h === 'localhost') return 'http://127.0.0.1:8100/api';
-  // En prod: pointe vers le backend Oracle (a configurer)
-  var backend = localStorage.getItem('profai_backend') || 'http://ORACLE_IP:8100/api';
-  return backend;
+  var saved = localStorage.getItem('profai_backend');
+  if (saved) return saved;
+  return 'http://ORACLE_IP:8100/api'; // Remplacer par l'IP Oracle
 })();
+
+function setBackend(url) {
+  localStorage.setItem('profai_backend', url);
+  API = url;
+  alert('Backend configuré: ' + url);
+  location.reload();
+}
 
 function changeLang(){ S.lang = document.getElementById('langSelect').value; }
 
