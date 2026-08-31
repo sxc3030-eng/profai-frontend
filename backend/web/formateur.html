@@ -1,0 +1,925 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🎓 AI Formateur — MAT Nexus</title>
+  <style>
+    :root {
+      --bg: #0f172a;
+      --bg2: #1e293b;
+      --bg3: #334155;
+      --fg: #f1f5f9;
+      --fg2: #94a3b8;
+      --accent: #38bdf8;
+      --accent2: #818cf8;
+      --green: #34d399;
+      --amber: #fbbf24;
+      --red: #f87171;
+      --pink: #f472b6;
+      --radius: 12px;
+      --font: 'Segoe UI', system-ui, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg);
+      color: var(--fg);
+      height: 100vh;
+      overflow: hidden;
+    }
+
+    /* ── Layout multi-fenêtres ── */
+    #app {
+      display: grid;
+      grid-template-rows: 56px 1fr;
+      height: 100vh;
+    }
+    #topbar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 8px 16px;
+      background: var(--bg2);
+      border-bottom: 1px solid var(--bg3);
+      z-index: 10;
+    }
+    #topbar .logo { font-size: 1.3rem; font-weight: 700; }
+    #topbar .logo span { color: var(--accent); }
+    #topbar select, #topbar button {
+      background: var(--bg3);
+      color: var(--fg);
+      border: 1px solid var(--bg3);
+      border-radius: 8px;
+      padding: 6px 12px;
+      font-size: 0.85rem;
+      cursor: pointer;
+    }
+    #topbar button:hover { background: #475569; }
+    #topbar button.active { background: var(--accent); color: #0f172a; font-weight: 700; }
+    .spacer { flex: 1; }
+
+    /* ── Grille de fenêtres ── */
+    #workspace {
+      display: grid;
+      gap: 4px;
+      padding: 4px;
+      overflow: hidden;
+    }
+    #workspace[data-layout="single"] { grid-template-columns: 1fr; }
+    #workspace[data-layout="split"] { grid-template-columns: 1fr 1fr; }
+    #workspace[data-layout="course"] { grid-template-columns: 1.2fr 0.8fr; }
+    #workspace[data-layout="exam"] { grid-template-columns: 1fr; grid-template-rows: 1fr; }
+    #workspace[data-layout="rss"] { grid-template-columns: 1fr 320px; }
+    #workspace[data-layout="course-rss"] { grid-template-columns: 1fr 0.7fr 300px; }
+
+    .window {
+      background: var(--bg2);
+      border-radius: var(--radius);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      min-height: 0;
+    }
+    .window-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 14px;
+      background: var(--bg3);
+      font-size: 0.85rem;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+    .window-header .dot { width: 10px; height: 10px; border-radius: 50%; }
+    .window-header .dot.green { background: var(--green); }
+    .window-header .dot.amber { background: var(--amber); }
+    .window-header .dot.blue { background: var(--accent); }
+    .window-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      min-height: 0;
+    }
+
+    /* ── Chat / Leçon ── */
+    .lesson-content h2 { color: var(--accent); margin-bottom: 12px; }
+    .lesson-content h3 { color: var(--accent2); margin: 16px 0 8px; }
+    .lesson-content p { line-height: 1.7; margin-bottom: 10px; color: var(--fg2); }
+    .lesson-content .concept { background: var(--bg3); border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 3px solid var(--accent); }
+    .lesson-content .example { background: #1a3a2a; border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 3px solid var(--green); }
+    .lesson-content .check { background: #3a2a1a; border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 3px solid var(--amber); }
+    .lesson-content .summary { background: #1a1a3a; border-radius: 8px; padding: 12px; margin: 10px 0; border-left: 3px solid var(--accent2); }
+    .lesson-nav { display: flex; gap: 8px; margin-top: 16px; }
+    .lesson-nav button {
+      flex: 1;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .lesson-nav .prev { background: var(--bg3); color: var(--fg); }
+    .lesson-nav .next { background: var(--accent); color: #0f172a; }
+    .lesson-nav .quiz-btn { background: var(--accent2); color: #fff; }
+
+    /* ── Quiz ── */
+    .quiz-question {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 16px;
+      margin-bottom: 12px;
+    }
+    .quiz-question h4 { margin-bottom: 8px; }
+    .quiz-choices { display: flex; flex-direction: column; gap: 6px; }
+    .quiz-choices label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 12px;
+      background: var(--bg);
+      border-radius: 6px;
+      cursor: pointer;
+      border: 2px solid transparent;
+    }
+    .quiz-choices label:hover { border-color: var(--accent); }
+    .quiz-choices label.selected { border-color: var(--accent); background: #1a2a3a; }
+    .quiz-choices label.correct { border-color: var(--green); background: #1a3a2a; }
+    .quiz-choices label.incorrect { border-color: var(--red); background: #3a1a1a; }
+    .quiz-choices input[type="radio"] { accent-color: var(--accent); }
+    .quiz-result {
+      text-align: center;
+      padding: 24px;
+    }
+    .quiz-result .score {
+      font-size: 3rem;
+      font-weight: 800;
+      margin: 16px 0;
+    }
+    .quiz-result .score.pass { color: var(--green); }
+    .quiz-result .score.fail { color: var(--red); }
+
+    /* ── Examen ── */
+    .exam-timer {
+      text-align: center;
+      font-size: 2rem;
+      font-weight: 800;
+      padding: 12px;
+      background: var(--bg3);
+      border-radius: 8px;
+      margin-bottom: 16px;
+    }
+    .exam-timer.warning { color: var(--amber); }
+    .exam-timer.danger { color: var(--red); animation: pulse 1s infinite; }
+    @keyframes pulse { 50% { opacity: 0.5; } }
+
+    /* ── Dashboard ── */
+    .dashboard-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 12px;
+    }
+    .stat-card {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 16px;
+      text-align: center;
+    }
+    .stat-card .value { font-size: 2rem; font-weight: 800; color: var(--accent); }
+    .stat-card .label { font-size: 0.8rem; color: var(--fg2); margin-top: 4px; }
+
+    .course-card {
+      background: var(--bg3);
+      border-radius: 8px;
+      padding: 16px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s;
+    }
+    .course-card:hover { border-color: var(--accent); }
+    .course-card h4 { margin-bottom: 4px; }
+    .course-card .meta { font-size: 0.8rem; color: var(--fg2); }
+
+    /* ── Mermaid ── */
+    .visual-container {
+      background: #fff;
+      border-radius: 8px;
+      padding: 16px;
+      margin: 12px 0;
+      overflow-x: auto;
+    }
+    .visual-caption {
+      text-align: center;
+      font-size: 0.8rem;
+      color: #64748b;
+      margin-top: 8px;
+    }
+
+    /* ── Voice ── */
+    .voice-controls {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    .voice-btn {
+      width: 36px; height: 36px;
+      border-radius: 50%;
+      border: none;
+      cursor: pointer;
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .voice-btn.play { background: var(--accent); color: #0f172a; }
+    .voice-btn.pause { background: var(--amber); color: #0f172a; }
+    .voice-btn.mic { background: var(--red); color: #fff; }
+    .voice-btn.mic.listening { animation: pulse 1s infinite; }
+
+    /* ── RSS Feed ── */
+    .rss-card {
+      background: var(--bg3);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 10px;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: border-color 0.2s, transform 0.15s;
+    }
+    .rss-card:hover { border-color: var(--accent); transform: translateY(-1px); }
+    .rss-card img {
+      width: 100%;
+      height: 140px;
+      object-fit: cover;
+      display: block;
+    }
+    .rss-card-body { padding: 10px 12px; }
+    .rss-card-body h4 { font-size: 0.9rem; margin-bottom: 4px; color: var(--fg); }
+    .rss-card-body .rss-link {
+      font-size: 0.75rem;
+      color: var(--accent);
+      word-break: break-all;
+    }
+    .rss-card-body .rss-date {
+      font-size: 0.7rem;
+      color: var(--fg2);
+      margin-top: 4px;
+    }
+    .rss-powered {
+      text-align: center;
+      font-size: 0.65rem;
+      color: var(--fg2);
+      padding: 8px;
+      border-top: 1px solid var(--bg3);
+      margin-top: 8px;
+    }
+    .rss-powered a { color: var(--accent2); text-decoration: none; }
+
+    /* ── Responsive ── */
+    @media (max-width: 768px) {
+      #workspace[data-layout="split"],
+      #workspace[data-layout="course"] { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <!-- Topbar -->
+  <div id="topbar">
+    <div class="logo">🎓 <span>AI Formateur</span></div>
+    <select id="langSelect" onchange="changeLang()">
+      <option value="fr">🇫🇷 FR</option>
+      <option value="en">🇬🇧 EN</option>
+    </select>
+    <select id="gradeSelect" onchange="changeGrade()">
+      <option value="secondary_3">Secondaire 3</option>
+      <option value="secondary_4">Secondaire 4</option>
+      <option value="secondary_5" selected>Secondaire 5</option>
+      <option value="cegep">Cégep</option>
+      <option value="university">Université</option>
+    </select>
+    <div class="spacer"></div>
+    <button onclick="setLayout('single')" class="active" id="btnSingle">📖 Cours</button>
+    <button onclick="setLayout('split')" id="btnSplit">📖 + ❓</button>
+    <button onclick="setLayout('course')" id="btnCourse">📖 + 📊</button>
+    <button onclick="startExam()" id="btnExam">📝 Examen</button>
+    <button onclick="showDashboard()">📊 Progrès</button>
+    <button onclick="toggleRSS()" id="btnRSS">📡 Feed</button>
+    <div class="voice-controls">
+      <button class="voice-btn play" onclick="toggleVoice()" title="Lire la leçon">▶</button>
+      <button class="voice-btn mic" id="micBtn" onclick="toggleMic()" title="Poser une question">🎤</button>
+    </div>
+  </div>
+
+  <!-- Workspace -->
+  <div id="workspace" data-layout="single">
+    <!-- Fenêtre 1: Cours/Leçon -->
+    <div class="window" id="win1">
+      <div class="window-header"><span class="dot green"></span> <span id="win1Title">Cours</span></div>
+      <div class="window-body" id="win1Body">
+        <div id="domainList"></div>
+        <div id="lessonView" style="display:none"></div>
+      </div>
+    </div>
+    <!-- Fenêtre 2: Quiz/Visuels -->
+    <div class="window" id="win2" style="display:none">
+      <div class="window-header"><span class="dot blue"></span> <span id="win2Title">Quiz</span></div>
+      <div class="window-body" id="win2Body"></div>
+    </div>
+    <!-- Fenêtre 3: Flux RSS -->
+    <div class="window" id="win3" style="display:none">
+      <div class="window-header"><span class="dot amber"></span> 📡 <span id="win3Title">OmniPost Feed</span></div>
+      <div class="window-body" id="win3Body" style="padding:8px">
+        <div id="rssLoading" style="text-align:center;padding:20px;color:var(--fg2)">Chargement du flux...</div>
+        <div id="rssItems" style="display:none"></div>
+        <div id="rssError" style="display:none;text-align:center;padding:20px;color:var(--red)">Flux indisponible</div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({ startOnLoad: false, theme: 'neutral', securityLevel: 'loose' });
+
+// ── State ──
+const API = 'http://127.0.0.1:8100/api';
+let state = {
+  lang: 'fr',
+  grade: 'secondary_5',
+  layout: 'single',
+  currentCourse: null,
+  currentLesson: 0,
+  currentQuiz: null,
+  examTimer: null,
+  examSeconds: 0,
+  isSpeaking: false,
+  isListening: false,
+  audioCtx: null,
+  mediaStream: null,
+};
+
+// ── Init ──
+async function init() {
+  await loadDomains();
+  await loadGrades();
+}
+function changeLang() { state.lang = document.getElementById('langSelect').value; loadDomains(); }
+function changeGrade() { state.grade = document.getElementById('gradeSelect').value; }
+
+// ── Layout ──
+function setLayout(layout) {
+  state.layout = layout;
+  const ws = document.getElementById('workspace');
+  const w2 = document.getElementById('win2');
+  const w3 = document.getElementById('win3');
+  ws.dataset.layout = rssVisible && layout === 'single' ? 'rss' :
+                      rssVisible && (layout === 'split' || layout === 'course') ? 'course-rss' :
+                      layout;
+  w2.style.display = layout === 'single' ? 'none' : '';
+  w3.style.display = rssVisible ? '' : 'none';
+  document.querySelectorAll('#topbar button').forEach(b => b.classList.remove('active'));
+  const btnMap = { single: 'btnSingle', split: 'btnSplit', course: 'btnCourse' };
+  if (btnMap[layout]) document.getElementById(btnMap[layout]).classList.add('active');
+}
+
+// ── Domaines ──
+async function loadDomains() {
+  const res = await fetch(`${API}/domains/by-family?lang=${state.lang}`);
+  const data = await res.json();
+  const container = document.getElementById('domainList');
+  const labels = {
+    formal_science: state.lang === 'fr' ? '🔬 Sciences formelles' : '🔬 Formal Sciences',
+    human_social: state.lang === 'fr' ? '🏛️ Sciences humaines' : '🏛️ Human & Social Sciences',
+    creative_practical: state.lang === 'fr' ? '🎨 Arts & Pratique' : '🎨 Creative & Practical',
+    transverse: state.lang === 'fr' ? '📚 Transversal' : '📚 Transversal',
+  };
+  let html = '<h2>' + (state.lang === 'fr' ? 'Choisis un cours' : 'Choose a course') + '</h2>';
+  for (const [family, domains] of Object.entries(data.families)) {
+    html += `<h3 style="margin-top:16px;color:var(--accent2)">${labels[family] || family}</h3>`;
+    html += '<div class="dashboard-grid">';
+    for (const d of domains) {
+      html += `<div class="course-card" onclick="startCourse('${d.domain}','${d.title.replace(/'/g, "\\'")}')">
+        <h4>${d.title}</h4>
+        <div class="meta">${d.description || ''}</div>
+      </div>`;
+    }
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+// ── Cours ──
+async function startCourse(domain, title) {
+  setLayout('single');
+  document.getElementById('win1Title').textContent = title;
+  const body = document.getElementById('win1Body');
+  body.innerHTML = '<p style="color:var(--fg2)">' + (state.lang === 'fr' ? 'Génération du cours...' : 'Generating course...') + '</p>';
+
+  const res = await fetch(`${API}/courses/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ domain, lang: state.lang, grade: state.grade, lesson_count: 5 }),
+  });
+  state.currentCourse = await res.json();
+  state.currentLesson = 0;
+  renderLesson();
+}
+
+function renderLesson() {
+  const course = state.currentCourse;
+  if (!course) return;
+  const i = state.currentLesson;
+  const lesson = course.lessons[i];
+  const body = document.getElementById('win1Body');
+
+  let html = `<div class="lesson-content">`;
+  html += `<h2>${lesson.title}</h2>`;
+  html += `<p style="color:var(--accent2);font-style:italic">${lesson.objective}</p>`;
+
+  if (lesson.prerequisites?.length) {
+    html += `<p style="color:var(--amber)">📋 ${lesson.prerequisites.join(', ')}</p>`;
+  }
+
+  for (const section of lesson.sections || []) {
+    if (section.type === 'intro') html += `<p>${section.content}</p>`;
+    else if (section.type === 'prerequisites') html += `<p style="color:var(--amber)">📋 ${section.content}</p>`;
+    else if (section.type === 'concept') html += `<div class="concept"><strong>${section.concept_name || ''}</strong><p>${section.content}</p></div>`;
+    else if (section.type === 'example') html += `<div class="example">💡 ${section.content}</div>`;
+    else if (section.type === 'check') html += `<div class="check">❓ ${section.content}</div>`;
+    else if (section.type === 'summary') html += `<div class="summary">📝 ${section.content}</div>`;
+    else html += `<p>${section.content}</p>`;
+  }
+
+  // Visuels
+  if (lesson.visuals?.length) {
+    for (const v of lesson.visuals) {
+      if (v.type === 'mermaid') {
+        const id = 'mermaid-' + Math.random().toString(36).slice(2, 8);
+        html += `<div class="visual-container"><div class="mermaid" id="${id}">${v.code}</div><p class="visual-caption">${v.caption || ''}</p></div>`;
+      }
+    }
+  }
+
+  html += `<div class="lesson-nav">
+    <button class="prev" onclick="prevLesson()" ${i === 0 ? 'disabled' : ''}>← ${state.lang === 'fr' ? 'Précédent' : 'Previous'}</button>
+    <button class="quiz-btn" onclick="startQuiz()">❓ Quiz</button>
+    <button class="next" onclick="nextLesson()" ${i >= course.lessons.length - 1 ? 'disabled' : ''}>${state.lang === 'fr' ? 'Suivant' : 'Next'} →</button>
+  </div>`;
+  html += `</div>`;
+
+  body.innerHTML = html;
+
+  // Render Mermaid diagrams
+  setTimeout(() => {
+    document.querySelectorAll('.mermaid').forEach(el => {
+      if (!el.innerHTML.includes('svg')) mermaid.run({ nodes: [el] });
+    });
+  }, 100);
+}
+
+function prevLesson() { if (state.currentLesson > 0) { state.currentLesson--; renderLesson(); } }
+function nextLesson() { if (state.currentLesson < state.currentCourse.lessons.length - 1) { state.currentLesson++; renderLesson(); } }
+
+// ── Quiz ──
+async function startQuiz() {
+  setLayout('split');
+  document.getElementById('win2Title').textContent = state.lang === 'fr' ? 'Quiz' : 'Quiz';
+  const body = document.getElementById('win2Body');
+  body.innerHTML = '<p style="color:var(--fg2)">' + (state.lang === 'fr' ? 'Génération du quiz...' : 'Generating quiz...') + '</p>';
+
+  const lesson = state.currentCourse.lessons[state.currentLesson];
+  const res = await fetch(`${API}/quiz/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      domain: state.currentCourse.domain,
+      lesson_title: lesson.title,
+      lang: state.lang,
+      grade: state.grade,
+      question_count: 5,
+    }),
+  });
+  state.currentQuiz = await res.json();
+  renderQuiz();
+}
+
+function renderQuiz() {
+  const quiz = state.currentQuiz;
+  const body = document.getElementById('win2Body');
+  let html = `<h3>${quiz.title}</h3><p style="color:var(--fg2)">${quiz.description}</p>`;
+
+  for (const q of quiz.questions) {
+    html += `<div class="quiz-question" id="q-${q.question_id}">
+      <h4>${q.question}</h4>`;
+    if (q.question_type === 'multiple_choice' && q.choices) {
+      html += '<div class="quiz-choices">';
+      q.choices.forEach((c, ci) => {
+        html += `<label onclick="selectChoice('${q.question_id}', '${c.replace(/'/g, "\\'")}', this)">
+          <input type="radio" name="${q.question_id}" value="${c.replace(/"/g, '&quot;')}"> ${c}
+        </label>`;
+      });
+      html += '</div>';
+    } else if (q.question_type === 'true_false') {
+      html += '<div class="quiz-choices">';
+      ['Vrai', 'Faux'].forEach(c => {
+        html += `<label onclick="selectChoice('${q.question_id}', '${c}', this)">
+          <input type="radio" name="${q.question_id}" value="${c}"> ${c}
+        </label>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<input type="text" id="input-${q.question_id}" placeholder="${state.lang === 'fr' ? 'Ta réponse...' : 'Your answer...'}" style="width:100%;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--bg3);border-radius:6px">`;
+    }
+    html += '</div>';
+  }
+
+  html += `<button onclick="submitQuiz()" style="width:100%;padding:12px;background:var(--accent);color:#0f172a;border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer;margin-top:12px">${state.lang === 'fr' ? 'Corriger' : 'Submit'}</button>`;
+  html += '<div id="quizFeedback"></div>';
+  body.innerHTML = html;
+}
+
+let quizAnswers = {};
+function selectChoice(qid, choice, label) {
+  quizAnswers[qid] = choice;
+  document.querySelectorAll(`#q-${qid} label`).forEach(l => l.classList.remove('selected'));
+  label.classList.add('selected');
+}
+
+async function submitQuiz() {
+  // Collect text inputs
+  document.querySelectorAll('input[type="text"]').forEach(inp => {
+    if (inp.id.startsWith('input-')) {
+      const qid = inp.id.replace('input-', '');
+      quizAnswers[qid] = inp.value;
+    }
+  });
+
+  const res = await fetch(`${API}/quiz/grade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      quiz: state.currentQuiz,
+      answers: quizAnswers,
+      lang: state.lang,
+      grade: state.grade,
+    }),
+  });
+  const data = await res.json();
+  const fb = data.feedback;
+
+  // Show correct/incorrect
+  for (const r of data.result.question_results) {
+    const el = document.getElementById(`q-${r.question_id}`);
+    if (!el) continue;
+    const labels = el.querySelectorAll('label');
+    labels.forEach(l => {
+      const radio = l.querySelector('input[type="radio"]');
+      if (!radio) return;
+      if (radio.value === r.correct_answer) l.classList.add('correct');
+      if (radio.value === r.student_answer && !r.is_correct) l.classList.add('incorrect');
+    });
+  }
+
+  document.getElementById('quizFeedback').innerHTML = `
+    <div class="quiz-result">
+      <div class="score ${fb.passed ? 'pass' : 'fail'}">${fb.percentage}%</div>
+      <p>${fb.message}</p>
+      <p style="color:var(--fg2);margin-top:8px">${fb.suggestion}</p>
+      <p style="color:var(--fg2)">Score: ${fb.score}</p>
+    </div>`;
+}
+
+// ── Examen ──
+async function startExam() {
+  if (!state.currentCourse) {
+    alert(state.lang === 'fr' ? 'Choisis un cours d\'abord !' : 'Choose a course first!');
+    return;
+  }
+  setLayout('single');
+  document.getElementById('workspace').dataset.layout = 'exam';
+  document.getElementById('win1Title').textContent = state.lang === 'fr' ? '📝 Examen blanc' : '📝 Practice Exam';
+  document.getElementById('btnExam').classList.add('active');
+
+  const body = document.getElementById('win1Body');
+  body.innerHTML = '<p style="color:var(--fg2)">' + (state.lang === 'fr' ? 'Préparation de l\'examen...' : 'Preparing exam...') + '</p>';
+
+  const res = await fetch(`${API}/exam/generate`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      domain: state.currentCourse.domain,
+      course_title: state.currentCourse.title,
+      lang: state.lang,
+      grade: state.grade,
+    }),
+  });
+  state.currentQuiz = await res.json();
+  state.examSeconds = state.currentQuiz.time_limit_minutes * 60;
+  quizAnswers = {};
+
+  renderExam();
+  startExamTimer();
+}
+
+function renderExam() {
+  const quiz = state.currentQuiz;
+  const body = document.getElementById('win1Body');
+  let html = `<div class="exam-timer" id="examTimer">${formatTime(state.examSeconds)}</div>`;
+  html += `<h2>${quiz.title}</h2><p style="color:var(--fg2)">${quiz.description}</p>`;
+
+  for (const q of quiz.questions) {
+    html += `<div class="quiz-question" id="q-${q.question_id}">
+      <h4>${q.question}</h4>`;
+    if (q.question_type === 'multiple_choice' && q.choices) {
+      html += '<div class="quiz-choices">';
+      q.choices.forEach(c => {
+        html += `<label onclick="selectChoice('${q.question_id}', '${c.replace(/'/g, "\\'")}', this)">
+          <input type="radio" name="${q.question_id}" value="${c.replace(/"/g, '&quot;')}"> ${c}
+        </label>`;
+      });
+      html += '</div>';
+    } else if (q.question_type === 'true_false') {
+      html += '<div class="quiz-choices">';
+      ['Vrai', 'Faux'].forEach(c => {
+        html += `<label onclick="selectChoice('${q.question_id}', '${c}', this)">
+          <input type="radio" name="${q.question_id}" value="${c}"> ${c}
+        </label>`;
+      });
+      html += '</div>';
+    } else {
+      html += `<input type="text" id="input-${q.question_id}" placeholder="${state.lang === 'fr' ? 'Ta réponse...' : 'Your answer...'}" style="width:100%;padding:8px;background:var(--bg);color:var(--fg);border:1px solid var(--bg3);border-radius:6px">`;
+    }
+    html += '</div>';
+  }
+
+  html += `<button onclick="submitExam()" style="width:100%;padding:12px;background:var(--red);color:#fff;border:none;border-radius:8px;font-weight:700;font-size:1rem;cursor:pointer;margin-top:12px">${state.lang === 'fr' ? 'Terminer l\'examen' : 'Finish Exam'}</button>`;
+  html += '<div id="examFeedback"></div>';
+  body.innerHTML = html;
+}
+
+function startExamTimer() {
+  if (state.examTimer) clearInterval(state.examTimer);
+  state.examTimer = setInterval(() => {
+    state.examSeconds--;
+    const el = document.getElementById('examTimer');
+    if (el) {
+      el.textContent = formatTime(state.examSeconds);
+      el.className = 'exam-timer' + (state.examSeconds < 300 ? ' danger' : state.examSeconds < 600 ? ' warning' : '');
+    }
+    if (state.examSeconds <= 0) { submitExam(); }
+  }, 1000);
+}
+
+function formatTime(s) {
+  const m = Math.floor(s / 60);
+  const sec = s % 60;
+  return `${m}:${sec.toString().padStart(2, '0')}`;
+}
+
+async function submitExam() {
+  if (state.examTimer) clearInterval(state.examTimer);
+  document.querySelectorAll('input[type="text"]').forEach(inp => {
+    if (inp.id.startsWith('input-')) {
+      quizAnswers[inp.id.replace('input-', '')] = inp.value;
+    }
+  });
+
+  const res = await fetch(`${API}/quiz/grade`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ quiz: state.currentQuiz, answers: quizAnswers, lang: state.lang, grade: state.grade }),
+  });
+  const data = await res.json();
+  const fb = data.feedback;
+
+  for (const r of data.result.question_results) {
+    const el = document.getElementById(`q-${r.question_id}`);
+    if (!el) continue;
+    el.querySelectorAll('label').forEach(l => {
+      const radio = l.querySelector('input[type="radio"]');
+      if (!radio) return;
+      if (radio.value === r.correct_answer) l.classList.add('correct');
+      if (radio.value === r.student_answer && !r.is_correct) l.classList.add('incorrect');
+    });
+  }
+
+  document.getElementById('examFeedback').innerHTML = `
+    <div class="quiz-result">
+      <h2>${state.lang === 'fr' ? 'Examen terminé !' : 'Exam Complete!'}</h2>
+      <div class="score ${fb.passed ? 'pass' : 'fail'}">${fb.percentage}%</div>
+      <p>${fb.message}</p>
+      <p style="color:var(--fg2)">${fb.suggestion}</p>
+    </div>`;
+  document.getElementById('examTimer').style.display = 'none';
+}
+
+// ── Dashboard ──
+async function showDashboard() {
+  setLayout('single');
+  document.getElementById('win1Title').textContent = state.lang === 'fr' ? '📊 Progression' : '📊 Progress';
+  const body = document.getElementById('win1Body');
+
+  const res = await fetch(`${API}/courses`);
+  const data = await res.json();
+
+  let html = '<div class="dashboard-grid">';
+  html += `<div class="stat-card"><div class="value">${data.total}</div><div class="label">${state.lang === 'fr' ? 'Cours disponibles' : 'Available courses'}</div></div>`;
+  html += `<div class="stat-card"><div class="value">234</div><div class="label">${state.lang === 'fr' ? 'Experts' : 'Experts'}</div></div>`;
+  html += `<div class="stat-card"><div class="value">5</div><div class="label">${state.lang === 'fr' ? 'Niveaux' : 'Grade levels'}</div></div>`;
+  html += `<div class="stat-card"><div class="value">FR/EN</div><div class="label">${state.lang === 'fr' ? 'Langues' : 'Languages'}</div></div>`;
+  html += '</div>';
+
+  html += '<h3 style="margin-top:20px">' + (state.lang === 'fr' ? 'Cours sauvegardés' : 'Saved courses') + '</h3>';
+  html += '<div class="dashboard-grid">';
+  for (const c of data.courses) {
+    html += `<div class="course-card" onclick="loadCourse('${c.course_id}')">
+      <h4>${c.title}</h4>
+      <div class="meta">${c.grade_label} · ${c.total_lessons} leçons · ${c.total_duration_minutes} min</div>
+    </div>`;
+  }
+  html += '</div>';
+
+  body.innerHTML = html;
+}
+
+async function loadCourse(courseId) {
+  const res = await fetch(`${API}/courses/${courseId}`);
+  state.currentCourse = await res.json();
+  state.currentLesson = 0;
+  setLayout('single');
+  document.getElementById('win1Title').textContent = state.currentCourse.title;
+  renderLesson();
+}
+
+// ── Voice ──
+async function toggleVoice() {
+  if (state.isSpeaking) {
+    state.isSpeaking = false;
+    return;
+  }
+  state.isSpeaking = true;
+  const lesson = state.currentCourse?.lessons?.[state.currentLesson];
+  if (!lesson) return;
+
+  let text = lesson.title + '. ';
+  for (const s of lesson.sections || []) {
+    text += (s.content || '') + ' ';
+  }
+
+  const res = await fetch(`${API}/voice/speak`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ text, lang: state.lang, grade: state.grade }),
+  });
+  const blob = await res.blob();
+  const audio = new Audio(URL.createObjectURL(blob));
+  audio.onended = () => { state.isSpeaking = false; };
+  audio.play();
+}
+
+async function toggleMic() {
+  const btn = document.getElementById('micBtn');
+  if (state.isListening) {
+    state.isListening = false;
+    btn.classList.remove('listening');
+    if (state.mediaStream) { state.mediaStream.getTracks().forEach(t => t.stop()); }
+    return;
+  }
+
+  try {
+    state.mediaStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    state.isListening = true;
+    btn.classList.add('listening');
+
+    const mediaRecorder = new MediaRecorder(state.mediaStream);
+    const chunks = [];
+    mediaRecorder.ondataavailable = e => chunks.push(e.data);
+    mediaRecorder.onstop = async () => {
+      const blob = new Blob(chunks, { type: 'audio/webm' });
+      const reader = new FileReader();
+      reader.onload = async () => {
+        const base64 = reader.result.split(',')[1];
+        const res = await fetch(`${API}/voice/listen`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ audio: base64, lang: state.lang }),
+        });
+        const data = await res.json();
+        if (data.text) {
+          alert((state.lang === 'fr' ? 'Tu as dit : ' : 'You said: ') + data.text);
+        }
+      };
+      reader.readAsDataURL(blob);
+    };
+    mediaRecorder.start();
+    setTimeout(() => { mediaRecorder.stop(); state.isListening = false; btn.classList.remove('listening'); }, 5000);
+  } catch (e) {
+    alert(state.lang === 'fr' ? 'Micro non disponible' : 'Microphone not available');
+    state.isListening = false;
+    btn.classList.remove('listening');
+  }
+}
+
+// ── Grades ──
+async function loadGrades() {
+  const res = await fetch(`${API}/grades?lang=${state.lang}`);
+  const data = await res.json();
+  const sel = document.getElementById('gradeSelect');
+  sel.innerHTML = data.grades.map(g => `<option value="${g.key}">${g.label} (${g.age_range})</option>`).join('');
+}
+
+// ── RSS Feed ──
+const RSS_URL = 'https://sxc3030-eng.github.io/omnipost-rss/rss.xml';
+let rssVisible = false;
+
+async function toggleRSS() {
+  rssVisible = !rssVisible;
+  const btn = document.getElementById('btnRSS');
+  const win3 = document.getElementById('win3');
+
+  if (rssVisible) {
+    btn.classList.add('active');
+    win3.style.display = '';
+    // Adapter le layout
+    if (state.layout === 'single') {
+      document.getElementById('workspace').dataset.layout = 'rss';
+    } else if (state.layout === 'split' || state.layout === 'course') {
+      document.getElementById('workspace').dataset.layout = 'course-rss';
+    }
+    await loadRSS();
+  } else {
+    btn.classList.remove('active');
+    win3.style.display = 'none';
+    document.getElementById('workspace').dataset.layout = state.layout;
+  }
+}
+
+async function loadRSS() {
+  const loading = document.getElementById('rssLoading');
+  const items = document.getElementById('rssItems');
+  const error = document.getElementById('rssError');
+  loading.style.display = '';
+  items.style.display = 'none';
+  error.style.display = 'none';
+
+  try {
+    // Proxy CORS via l'API du serveur ou fetch direct
+    const res = await fetch(RSS_URL);
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    const xml = await res.text();
+    const parser = new DOMParser();
+    const doc = parser.parseFromString(xml, 'application/xml');
+
+    const parseError = doc.querySelector('parsererror');
+    if (parseError) throw new Error('XML invalide');
+
+    const channel = doc.querySelector('channel');
+    const feedTitle = channel?.querySelector('title')?.textContent || 'OmniPost Feed';
+    document.getElementById('win3Title').textContent = '📡 ' + feedTitle;
+
+    const itemNodes = doc.querySelectorAll('item');
+    let html = '';
+
+    itemNodes.forEach(item => {
+      const title = item.querySelector('title')?.textContent || 'Sans titre';
+      const link = item.querySelector('link')?.textContent || '#';
+      const pubDate = item.querySelector('pubDate')?.textContent || '';
+      const thumb = item.querySelector('thumbnail')?.getAttribute('url')
+        || item.querySelector('enclosure')?.getAttribute('url')
+        || '';
+
+      const date = pubDate ? new Date(pubDate).toLocaleDateString(state.lang === 'fr' ? 'fr-CA' : 'en-US', {
+        day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+      }) : '';
+
+      html += `<div class="rss-card" onclick="window.open('${link.replace(/'/g, "\\'")}', '_blank')">
+        ${thumb ? `<img src="${thumb}" alt="${title}" loading="lazy" onerror="this.style.display='none'">` : ''}
+        <div class="rss-card-body">
+          <h4>${title}</h4>
+          <div class="rss-link">${link.replace(/^https?:\/\//, '').substring(0, 40)}...</div>
+          ${date ? `<div class="rss-date">${date}</div>` : ''}
+        </div>
+      </div>`;
+    });
+
+    html += `<div class="rss-powered">
+      Propulsé par <a href="https://sxc3030-eng.github.io/omnipost-rss/" target="_blank">OmniPost AdFlow RSS</a>
+    </div>`;
+
+    items.innerHTML = html;
+    loading.style.display = 'none';
+    items.style.display = '';
+  } catch (e) {
+    console.error('RSS load error:', e);
+    loading.style.display = 'none';
+    error.style.display = '';
+    error.textContent = '📡 Flux RSS temporairement indisponible';
+  }
+}
+
+// ── Start ──
+init();
+</script>
+</body>
+</html>

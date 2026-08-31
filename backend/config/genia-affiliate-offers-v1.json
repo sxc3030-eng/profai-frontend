@@ -1,0 +1,71 @@
+{
+  "schema_version": "genia-affiliate-offers-v1",
+  "purpose": "Offres affiliees redigees a la main, ciblees sur l'audience metal/underground de GIa Underground. Consommees par scripts/genia_seed_affiliate_ads_v1.py qui construit les liens de tracking et remplit la table affiliate_ads.",
+  "review_status": "BROUILLON_A_RELIRE",
+  "review_note": "Aucune date de festival n'est inscrite ici, volontairement. Les dates changent d'une edition a l'autre et une date fausse dans une annonce publiee est pire qu'une annonce absente. Les liens pointent sur une recherche par destination; Expedia applique ses dates par defaut. Pour cibler une edition precise: faire la recherche sur expedia.ca avec les vraies dates, copier l'URL, la mettre dans target_url, et renseigner end_date pour que l'annonce expire avec l'evenement.",
+  "disclosure_required": true,
+  "disclosure_note": "Toute annonce servie a partir de ces donnees doit porter la double divulgation (relation commerciale + implication IA) dans le meme ecran que la recommandation. Voir la politique FTC 2023 sur les endorsements.",
+  "offers": [
+    {
+      "key": "hellfest-clisson",
+      "title": "Hebergement pres du Hellfest",
+      "description": "Hotels et logements a Clisson et autour de Nantes pour le Hellfest.",
+      "cta_text": "Voir les hebergements",
+      "destination": "Clisson, France",
+      "site": "www.expedia.fr",
+      "visual_url": null,
+      "priority": 8,
+      "platforms": ["feed"],
+      "pubref": "hellfest-clisson"
+    },
+    {
+      "key": "wacken-hamburg",
+      "title": "Hebergement pres du Wacken Open Air",
+      "description": "Hotels a Hambourg, principale porte d'entree vers Wacken.",
+      "cta_text": "Voir les hebergements",
+      "destination": "Hamburg, Germany",
+      "site": "www.expedia.ca",
+      "visual_url": null,
+      "priority": 8,
+      "platforms": ["feed"],
+      "pubref": "wacken-hamburg"
+    },
+    {
+      "key": "graspop-dessel",
+      "title": "Hebergement pres du Graspop",
+      "description": "Hotels a Dessel et en Campine belge pour le Graspop Metal Meeting.",
+      "cta_text": "Voir les hebergements",
+      "destination": "Dessel, Belgium",
+      "site": "www.expedia.ca",
+      "visual_url": null,
+      "priority": 6,
+      "platforms": ["feed"],
+      "pubref": "graspop-dessel"
+    },
+    {
+      "key": "exemple-lien-libre",
+      "_comment": "Exemple: n'importe quel partenaire. Fournir cta_url tel quel et il est repris sans transformation. Sert a Booking, un lien de tracking CJ, une billetterie, une boutique de groupe. Seuls javascript:/data:/file: sont refuses, et http simple sauf si allow_http est vrai.",
+      "title": "Exemple - lien partenaire libre",
+      "description": "Remplacer par une vraie offre. Present pour montrer qu'un lien hors Expedia passe.",
+      "cta_text": "Voir",
+      "cta_url": "https://www.booking.com/",
+      "network": "autre",
+      "visual_url": null,
+      "priority": 1,
+      "platforms": ["feed"],
+      "pubref": "exemple-libre"
+    },
+    {
+      "key": "bloodstock-derby",
+      "title": "Hebergement pres du Bloodstock",
+      "description": "Hotels autour de Derby pour le Bloodstock Open Air.",
+      "cta_text": "Voir les hebergements",
+      "destination": "Derby, United Kingdom",
+      "site": "www.expedia.co.uk",
+      "visual_url": null,
+      "priority": 5,
+      "platforms": ["feed"],
+      "pubref": "bloodstock-derby"
+    }
+  ]
+}
