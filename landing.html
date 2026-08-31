@@ -1,0 +1,352 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="profAI — Votre professeur IA personnel. Cours, quiz, voix, visuels. Secondaire au Cégep. Bilingue FR/EN.">
+  <meta name="theme-color" content="#0f172a">
+  <title>profAI — Votre professeur IA personnel</title>
+  <style>
+    :root {
+      --bg: #0f172a; --bg2: #1e293b; --bg3: #334155;
+      --fg: #f1f5f9; --fg2: #94a3b8;
+      --blue: #38bdf8; --purple: #818cf8; --green: #34d399;
+      --amber: #fbbf24; --red: #f87171;
+      --font: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: var(--font); background: var(--bg); color: var(--fg); }
+    section { padding: 80px 20px; max-width: 1100px; margin: 0 auto; }
+
+    /* Hero */
+    .hero { text-align: center; padding: 100px 20px 60px; position: relative; overflow: hidden; }
+    .hero::before {
+      content: ''; position: absolute; top: -50%; left: -50%; width: 200%; height: 200%;
+      background: radial-gradient(circle at 30% 20%, rgba(56,189,248,0.08) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 60%, rgba(129,140,248,0.08) 0%, transparent 50%);
+    }
+    .hero-content { position: relative; z-index: 1; }
+    .hero h1 { font-size: clamp(2.2rem, 5vw, 3.5rem); font-weight: 800; line-height: 1.15; margin-bottom: 20px; }
+    .hero h1 span { background: linear-gradient(135deg, var(--blue), var(--purple)); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 1.2rem; color: var(--fg2); max-width: 600px; margin: 0 auto 32px; line-height: 1.6; }
+    .hero-buttons { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .btn { padding: 14px 32px; border-radius: 12px; font-size: 1rem; font-weight: 700; cursor: pointer; border: none; transition: all 0.2s; text-decoration: none; display: inline-block; }
+    .btn-primary { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; box-shadow: 0 4px 20px rgba(56,189,248,0.3); }
+    .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 8px 30px rgba(56,189,248,0.4); }
+    .btn-outline { background: transparent; color: var(--fg); border: 2px solid var(--bg3); }
+    .btn-outline:hover { border-color: var(--blue); color: var(--blue); }
+
+    /* Features */
+    .features h2, .pricing h2, .how h2 { text-align: center; font-size: 2rem; margin-bottom: 12px; }
+    .features .sub, .pricing .sub, .how .sub { text-align: center; color: var(--fg2); margin-bottom: 48px; font-size: 1.1rem; }
+    .features-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 20px; }
+    .feature-card { background: var(--bg2); border-radius: 16px; padding: 28px; border: 1px solid var(--bg3); transition: border-color 0.2s; }
+    .feature-card:hover { border-color: var(--blue); }
+    .feature-card .icon { font-size: 2rem; margin-bottom: 12px; }
+    .feature-card h3 { font-size: 1.1rem; margin-bottom: 8px; }
+    .feature-card p { color: var(--fg2); font-size: 0.9rem; line-height: 1.5; }
+
+    /* Pricing */
+    .pricing-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 20px; }
+    .price-card { background: var(--bg2); border-radius: 16px; padding: 32px 24px; border: 1px solid var(--bg3); text-align: center; position: relative; }
+    .price-card.featured { border-color: var(--purple); box-shadow: 0 0 30px rgba(129,140,248,0.15); }
+    .price-card.featured::before { content: 'Populaire'; position: absolute; top: -12px; left: 50%; transform: translateX(-50%); background: var(--purple); color: #fff; padding: 4px 16px; border-radius: 20px; font-size: 0.75rem; font-weight: 700; }
+    .price-card h3 { font-size: 1.2rem; margin-bottom: 8px; }
+    .price-card .price { font-size: 2.5rem; font-weight: 800; margin: 12px 0; }
+    .price-card .price span { font-size: 1rem; color: var(--fg2); font-weight: 400; }
+    .price-card ul { list-style: none; text-align: left; margin: 20px 0; }
+    .price-card ul li { padding: 6px 0; font-size: 0.9rem; color: var(--fg2); }
+    .price-card ul li::before { content: '✓ '; color: var(--green); font-weight: 700; }
+    .price-card .btn { width: 100%; }
+
+    /* How it works */
+    .steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 24px; }
+    .step { text-align: center; }
+    .step .circle { width: 64px; height: 64px; border-radius: 50%; background: linear-gradient(135deg, var(--blue), var(--purple)); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 800; margin: 0 auto 16px; }
+    .step h3 { font-size: 1rem; margin-bottom: 6px; }
+    .step p { color: var(--fg2); font-size: 0.85rem; }
+
+    /* CTA */
+    .cta { text-align: center; max-width: 1100px; margin: 40px auto; background: var(--bg2); border-radius: 24px; padding: 60px 20px; }
+    .cta h2 { font-size: 2rem; margin-bottom: 12px; }
+    .cta p { color: var(--fg2); margin-bottom: 24px; }
+
+    /* Auth modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 100; justify-content: center; align-items: center; }
+    .modal-overlay.active { display: flex; }
+    .modal { background: var(--bg2); border-radius: 16px; padding: 32px; width: 100%; max-width: 420px; border: 1px solid var(--bg3); position: relative; }
+    .modal h2 { margin-bottom: 20px; }
+    .modal .close { position: absolute; top: 12px; right: 16px; background: none; border: none; color: var(--fg2); font-size: 1.5rem; cursor: pointer; }
+    .modal input { width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--bg3); background: var(--bg); color: var(--fg); font-size: 0.95rem; margin-bottom: 12px; }
+    .modal .switch { text-align: center; margin-top: 12px; color: var(--fg2); font-size: 0.85rem; }
+    .modal .switch a { color: var(--blue); cursor: pointer; }
+    .modal .error { color: var(--red); font-size: 0.85rem; margin-bottom: 8px; display: none; }
+
+    /* Footer */
+    footer { text-align: center; padding: 40px 20px; color: var(--fg2); font-size: 0.85rem; border-top: 1px solid var(--bg3); }
+    footer a { color: var(--blue); text-decoration: none; }
+
+    /* Success */
+    .success-box { display: none; text-align: center; padding: 24px; }
+    .success-box.active { display: block; }
+    .success-box .check { font-size: 3rem; margin-bottom: 12px; }
+  </style>
+</head>
+<body>
+
+<!-- Hero -->
+<section class="hero">
+  <div class="hero-content">
+    <h1>Apprends avec un <span>prof IA</span> qui s'adapte à toi</h1>
+    <p>Des cours interactifs, des quiz intelligents, une voix qui t'explique et des visuels qui t'aident à comprendre. Secondaire 3 au Cégep.</p>
+    <div class="hero-buttons">
+      <button class="btn btn-primary" onclick="showAuth('signup')">🎓 Commencer gratuitement</button>
+      <button class="btn btn-outline" onclick="showAuth('login')">🔑 J'ai déjà un compte</button>
+    </div>
+  </div>
+</section>
+
+<!-- Features -->
+<section class="features">
+  <h2>Pourquoi profAI ?</h2>
+  <p class="sub">Un vrai professeur, pas un chatbot qui donne les réponses</p>
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="icon">🧭</div>
+      <h3>Méthode socratique</h3>
+      <p>Jamais la réponse directe. Le prof te guide par questions et indices pour que tu découvres par toi-même.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎯</div>
+      <h3>Rythme adaptatif</h3>
+      <p>Si tu bloques, on ralentit. Si tu files, on accélère. Le prof détecte ton rythme et s'ajuste.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📊</div>
+      <h3>Visuels à la demande</h3>
+      <p>Diagrammes, graphiques, tableaux, équations — le prof crée le visuel exact dont tu as besoin.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🎤</div>
+      <h3>Voix + écoute</h3>
+      <p>Le prof te lit la leçon, et toi tu peux lui poser des questions à l'oral. Comme un vrai cours.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">📝</div>
+      <h3>Quiz + examens</h3>
+      <p>QCM, exercices, examens blancs du ministère. Correction expliquée, pas juste une note.</p>
+    </div>
+    <div class="feature-card">
+      <div class="icon">🌐</div>
+      <h3>Bilingue FR/EN</h3>
+      <p>Tous les cours en français ET en anglais. Passe de l'un à l'autre en un clic.</p>
+    </div>
+  </div>
+</section>
+
+<!-- How it works -->
+<section class="how">
+  <h2>Comment ça marche</h2>
+  <p class="sub">En 3 étapes, t'es prêt à apprendre</p>
+  <div class="steps">
+    <div class="step"><div class="circle">1</div><h3>Inscris-toi</h3><p>Crée ton compte gratuit en 30 secondes. Pas de carte de crédit.</p></div>
+    <div class="step"><div class="circle">2</div><h3>Choisis ton cours</h3><p>Maths, sciences, français, histoire... 150+ cours disponibles.</p></div>
+    <div class="step"><div class="circle">3</div><h3>Apprends !</h3><p>Le prof s'adapte à toi. Pose des questions, fais des quiz, progresse.</p></div>
+  </div>
+</section>
+
+<!-- Pricing -->
+<section class="pricing">
+  <h2>Des prix pensés pour les étudiants</h2>
+  <p class="sub">Commence gratuitement, upgrade quand tu veux</p>
+  <div class="pricing-grid">
+    <div class="price-card">
+      <h3>🆓 Gratuit</h3>
+      <div class="price">0€<span>/mois</span></div>
+      <ul>
+        <li>3 cours complets</li>
+        <li>10 quiz / jour</li>
+        <li>Visuels de base</li>
+        <li>Voix navigateur</li>
+      </ul>
+      <button class="btn btn-outline" onclick="showAuth('signup')">Commencer</button>
+    </div>
+    <div class="price-card featured">
+      <h3>👤 Étudiant</h3>
+      <div class="price">5€<span>/mois</span></div>
+      <ul>
+        <li>Tous les cours (150+)</li>
+        <li>Quiz illimités</li>
+        <li>Visuels avancés</li>
+        <li>Révision espacée</li>
+        <li>Examens blancs</li>
+        <li>Professeur vocal</li>
+      </ul>
+      <button class="btn btn-primary" onclick="showAuth('signup')">Essayer gratuit</button>
+    </div>
+    <div class="price-card">
+      <h3>👨‍👩‍👧 Famille</h3>
+      <div class="price">12€<span>/mois</span></div>
+      <ul>
+        <li>4 profils élèves</li>
+        <li>Tout Étudiant inclus</li>
+        <li>Dashboard parent</li>
+        <li>Rapports de progression</li>
+      </ul>
+      <button class="btn btn-outline" onclick="showAuth('signup')">Essayer gratuit</button>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<section class="cta">
+  <h2>Prêt à apprendre autrement ?</h2>
+  <p>Plus de 150 cours, 5 niveaux, 2 langues. Ton prof personnel t'attend.</p>
+  <button class="btn btn-primary" onclick="showAuth('signup')" style="font-size:1.1rem;padding:16px 40px">🎓 Commencer gratuitement</button>
+</section>
+
+<footer>
+  <p>© 2026 profAI — Propulsé par <a href="https://sxc3030-eng.github.io/omnipost-rss/" target="_blank">OmniPost AdFlow RSS</a> · <a href="#">Confidentialité</a> · <a href="#">Conditions</a></p>
+</footer>
+
+<!-- Auth Modal -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="close" onclick="closeAuth()">&times;</button>
+    <h2 id="authTitle">Inscription</h2>
+    <div id="authForm">
+      <div class="error" id="authError"></div>
+      <input type="text" id="authName" placeholder="Ton prénom" style="display:none">
+      <input type="email" id="authEmail" placeholder="Ton email">
+      <input type="password" id="authPassword" placeholder="Ton mot de passe (min 6 caractères)">
+      <button class="btn btn-primary" id="authSubmit" onclick="doAuth()" style="width:100%">S'inscrire</button>
+      <div class="switch" id="authSwitch">
+        Déjà un compte ? <a onclick="toggleAuth()">Se connecter</a>
+      </div>
+    </div>
+    <div class="success-box" id="authSuccess">
+      <div class="check">✅</div>
+      <h3>Compte créé !</h3>
+      <p id="successMsg"></p>
+      <button class="btn btn-primary" onclick="goToApp()" style="margin-top:12px">🎓 Accéder au formateur</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const API = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost'
+  ? 'http://127.0.0.1:8100/api'
+  : 'https://api.profai.ca/api';
+
+let authMode = 'signup';
+const TOKEN_KEY = 'profai_token';
+const REFRESH_KEY = 'profai_refresh';
+
+function showAuth(mode) {
+  authMode = mode;
+  const modal = document.getElementById('authModal');
+  const form = document.getElementById('authForm');
+  const success = document.getElementById('authSuccess');
+  const nameField = document.getElementById('authName');
+  const title = document.getElementById('authTitle');
+  const submit = document.getElementById('authSubmit');
+  const switchEl = document.getElementById('authSwitch');
+
+  modal.classList.add('active');
+  form.style.display = '';
+  success.classList.remove('active');
+  document.getElementById('authError').style.display = 'none';
+
+  if (mode === 'signup') {
+    title.textContent = 'Inscription';
+    submit.textContent = 'S\'inscrire';
+    nameField.style.display = '';
+    switchEl.innerHTML = 'Déjà un compte ? <a onclick="toggleAuth()">Se connecter</a>';
+  } else {
+    title.textContent = 'Connexion';
+    submit.textContent = 'Se connecter';
+    nameField.style.display = 'none';
+    switchEl.innerHTML = 'Pas encore de compte ? <a onclick="toggleAuth()">S\'inscrire</a>';
+  }
+}
+
+function toggleAuth() {
+  showAuth(authMode === 'signup' ? 'login' : 'signup');
+}
+
+function closeAuth() {
+  document.getElementById('authModal').classList.remove('active');
+}
+
+async function doAuth() {
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const name = document.getElementById('authName').value.trim();
+  const errorEl = document.getElementById('authError');
+  const submit = document.getElementById('authSubmit');
+
+  errorEl.style.display = 'none';
+
+  if (!email || !password) {
+    errorEl.textContent = 'Email et mot de passe requis.';
+    errorEl.style.display = '';
+    return;
+  }
+
+  if (authMode === 'signup' && password.length < 6) {
+    errorEl.textContent = 'Mot de passe trop court (min 6 caractères).';
+    errorEl.style.display = '';
+    return;
+  }
+
+  const endpoint = authMode === 'signup' ? '/auth/signup' : '/auth/login';
+  const body = authMode === 'signup' ? { email, password, name } : { email, password };
+
+  submit.disabled = true;
+  submit.textContent = 'Patientez...';
+
+  try {
+    const res = await fetch(API + endpoint, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+
+    const data = await res.json();
+
+    if (data.error) {
+      errorEl.textContent = typeof data.error === 'string' ? data.error : 'Erreur. Réessayez.';
+      errorEl.style.display = '';
+      submit.disabled = false;
+      submit.textContent = authMode === 'signup' ? 'S\'inscrire' : 'Se connecter';
+      return;
+    }
+
+    // Succès !
+    localStorage.setItem(TOKEN_KEY, data.token);
+    localStorage.setItem(REFRESH_KEY, data.refresh_token);
+
+    document.getElementById('authForm').style.display = 'none';
+    document.getElementById('authSuccess').classList.add('active');
+    document.getElementById('successMsg').textContent =
+      'Bienvenue ' + (data.user.name || email.split('@')[0]) + ' !';
+
+  } catch (e) {
+    errorEl.textContent = 'Erreur de connexion. Vérifiez votre connexion.';
+    errorEl.style.display = '';
+    submit.disabled = false;
+    submit.textContent = authMode === 'signup' ? 'S\'inscrire' : 'Se connecter';
+  }
+}
+
+function goToApp() {
+  window.location.href = '/formateur.html';
+}
+
+// Fermer la modale au clic extérieur
+document.getElementById('authModal').addEventListener('click', function(e) {
+  if (e.target === this) closeAuth();
+});
+</script>
+</body>
+</html>
